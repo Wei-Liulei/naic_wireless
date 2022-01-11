@@ -11,6 +11,7 @@
 - `Model_train.py`
 - `Model_evaluation_encoder.py`
 - `Model_evaluation_decoder.py`
+- `utils.py`
 
 ### 文件说明
 #### Model_define_tf.py
@@ -24,3 +25,6 @@
 
 #### Model_evaluation_decoder.py
 解码模型的推理参考代码，能成功推理是成功提交的基础保证。
+
+#### utils.py
+一些工具函数
