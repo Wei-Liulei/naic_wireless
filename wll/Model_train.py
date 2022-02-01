@@ -1,16 +1,23 @@
 import numpy as np
-import scipy.io as scio
 from tensorflow import keras
 from Model_define_tf import Encoder, Decoder, NMSE
-from utils import plot_result
+from utils import *
 
+# plot_results,
 # %% load data
 data_path = '/media/D/data_set/WirelessCommunication/train'
 
-x_train = scio.loadmat(data_path+'/Htrain.mat')['H_train'].astype('float32')
-x_test = scio.loadmat(data_path+'/Htest.mat')['H_test'].astype('float32')
+
+model_save_path = './Modelsave/'
+is_fit = 0
+# load_model='nmse0537'
+load_model='nmse059'
 
 
+x_train, x_test = get_data(data_path)
+x_train=x_train[:100]
+# x_train = (x_train*2 -1)*10**5 -4
+# x_test = (x_test*2 -1)*10**5 -4
 # %% build model
 # parameters
 feedback_bits = 512
@@ -33,19 +40,43 @@ encoder_out = encoder(autoencoder_input)
 decoder_out = decoder(encoder_out)
 autoencoder = keras.Model(inputs=autoencoder_input, outputs=decoder_out, name='autoencoder')
 autoencoder.compile(optimizer='adam', loss='mse')
+
 print(autoencoder.summary())
+# print(Encoder.summary())|
 keras.utils.plot_model(autoencoder, show_shapes=True)  # , rankdir="LR"
+keras.utils.plot_model(autoencoder.layers[1], show_shapes=True)  # , rankdir="LR"
 
-# %% model training
-autoencoder.fit(x=x_train, y=x_train, batch_size=256, epochs=1, validation_split=0.1)
+# %% model load 
 
+# load_model=False
+if load_model:   
+    encoder.load_weights(model_save_path + load_model + '/encoder.h5')
+    decoder.load_weights(model_save_path + load_model + '/decoder.h5')
+if is_fit:
+    autoencoder.fit(x=x_train, y=x_train, batch_size=16, epochs=1, validation_split=0.1)
 # %% model save
-model_save_path = './Modelsave/'
 encoder.save(model_save_path + 'encoder.h5')
 decoder.save(model_save_path + 'decoder.h5')
-
-# %% model test
+# autoencoder.save(model_save_path + 'autoencoder')
+# %% model eval
+# autoencoder = keras.models.load_model(model_save_path + 'autoencoder')
 y_test = autoencoder.predict(x_test)
 print('The mean NMSE is ' + np.str(NMSE(x_test, y_test)))
 
-plot_result(x_test, y_test, 5)
+
+# plot_results(x_test, y_test, 5)
+plot_results_x(x_test, 5, 10)
+plot_results_v2(x_test, y_test, 5, 10)
+
+# if __name__ == '__main__':
+
+# %%
+# import matplotlib.pyplot as plt
+# i = 10
+# # x_testplo_i = (x_test[i, :, :, 0]-0.5)#*10**5
+# x_testplo = abs(x_test[i, :, :, 0]-0.5 + 1j*(x_test[i, :, :, 1]-0.5))
+# # decoded_imgsplo = abs(x_test[i, :, :, 0]-0.5 + 1j*(x_test[i, :, :, 1]-0.5))
+# plt.imshow(np.max(np.max(x_testplo))-x_testplo.T)
+
+# x_testplo_j = (x_test[i, :, :, 1]-0.5)*10**5
+# plt.imshow(np.max(np.max(x_testplo_j))-x_testplo_j.T)

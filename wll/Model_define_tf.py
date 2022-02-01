@@ -4,9 +4,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-#This part realizes the quantization and dequantization operations.
-#The output of the encoder must be the bitstream.
+# This part realizes the quantization and dequantization operations.
+# The output of the encoder must be the bitstream.
 
+# 数字, 比特转换
 def Num2Bit(Num, B):
     Num_ = Num.numpy()
     bit = (np.unpackbits(np.array(Num_, np.uint8), axis=1).reshape(-1, Num_.shape[1], 8)[:, :, 4:]).reshape(-1, Num_.shape[1] * B)
@@ -24,6 +25,7 @@ def Bit2Num(Bit, B):
     return tf.cast(num, dtype=tf.float32)
 
 
+# %%
 @tf.custom_gradient
 def QuantizationOp(x, B):
     step = tf.cast((2 ** B), dtype=tf.float32)
@@ -38,7 +40,7 @@ def QuantizationOp(x, B):
 
 
 class QuantizationLayer(tf.keras.layers.Layer):
-    def __init__(self, B,**kwargs):
+    def __init__(self, B, **kwargs):
         self.B = B
         super(QuantizationLayer, self).__init__()
 
@@ -66,7 +68,7 @@ def DequantizationOp(x, B):
 
 
 class DeuantizationLayer(tf.keras.layers.Layer):
-    def __init__(self, B,**kwargs):
+    def __init__(self, B, **kwargs):
         self.B = B
         super(DeuantizationLayer, self).__init__()
 
@@ -82,7 +84,7 @@ class DeuantizationLayer(tf.keras.layers.Layer):
 # More details about the neural networks can be found in [1].
 # [1] C. Wen, W. Shih and S. Jin, "Deep Learning for Massive MIMO CSI Feedback,"
 # in IEEE Wireless Communications Letters, vol. 7, no. 5, pp. 748-751, Oct. 2018, doi: 10.1109/LWC.2018.2818160.
-def Encoder(x,feedback_bits):
+def Encoder(x, feedback_bits):
     B = 4
     with tf.compat.v1.variable_scope('Encoder'):
         x = layers.Conv2D(2, 3, padding='SAME', activation='relu')(x)
@@ -93,7 +95,7 @@ def Encoder(x,feedback_bits):
     return encoder_output
 
 
-def Decoder(x,feedback_bits):
+def Decoder(x, feedback_bits):
     B = 4
     decoder_input = DeuantizationLayer(B)(x)
     x = tf.reshape(decoder_input, (-1, int(feedback_bits//B)))
@@ -104,7 +106,7 @@ def Decoder(x,feedback_bits):
         x = layers.Conv2D(16, 3, padding='SAME', activation='relu')(x)
         x = layers.Conv2D(2, 3, padding='SAME', activation='relu')(x)
         x_ini = keras.layers.Add()([x_ini, x])
-    decoder_output = layers.Conv2D(2, 3, padding='SAME',activation="sigmoid")(x_ini)
+    decoder_output = layers.Conv2D(2, 3, padding='SAME', activation="sigmoid")(x_ini)
     return decoder_output
 
 
@@ -124,4 +126,4 @@ def NMSE(x, x_hat):
 # Return keywords of your own custom layers to ensure that model
 # can be successfully loaded in test file.
 def get_custom_objects():
-    return {"QuantizationLayer":QuantizationLayer,"DeuantizationLayer":DeuantizationLayer}
+    return {"QuantizationLayer": QuantizationLayer, "DeuantizationLayer": DeuantizationLayer}
