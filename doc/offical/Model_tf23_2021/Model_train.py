@@ -39,9 +39,7 @@ autoencoder.compile(optimizer='adam', loss='mse')
 print(autoencoder.summary())
 
 # model training
-# autoencoder.fit(x=x_train, y=x_train, batch_size=256, epochs=1000, validation_split=0.1)
-autoencoder.fit(x=x_train, y=x_train, batch_size=256, epochs=1, validation_split=0.1)
-
+autoencoder.fit(x=x_train, y=x_train, batch_size=256, epochs=1000, validation_split=0.1)
 
 # model save
 # save encoder
